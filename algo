@@ -1,0 +1,12 @@
+client -> serveur : 0xff
+client -> serveur : 0xfe 0x0d
+serveur -> client : malformed packet
+client -> serveur : nickname (race)
+serveur -> client : dimension de la map
+serveur -> client : malformed packed
+
+
+cycle de 3 paquets envoyés:
+ID 0x00: nom du chien
+ID 0x10: coordonnées du chien et des potentiels autres chiens / moutons
+ID 0x40: coordonnées du rectangle de vision
