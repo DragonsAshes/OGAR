@@ -12,6 +12,7 @@ typedef enum DOG
   WAITING,
   TRACKING,
 } DOG;
+//Peut etre besoin d'un 4eme status pour le retour d'un chien jaune à sa base (peut peut etre recorrespondre à l'initalisation)
 
 DOG yellow = INIT;
 
@@ -105,16 +106,20 @@ void initialize(struct lws *wsi, Pile* pile, int i)
   vecteur position;
   int tab[4];
   int old;
-  while(strcmp(tmp->cell->name, "yellow") != 0)
+  while(tmp != NULL)
+  {
+  	if((tmp->cell->flag & 0x8) && strcmp(tmp->cell->name, "yellow") == 0)
+  		break;
+  	tmp = tmp->next;
+  }
+  /*while(strcmp(tmp->cell->name, "yellow") != 0)
   {
     tmp = tmp->next;
-  }
+  }*/
   calcul1 = abs(tmp->cell->x - 3000) + abs(tmp->cell->y - 2000);
   calcul2 = abs(tmp->cell->x - 3000) + abs(tmp->cell->y - 4000);
   calcul3 = abs(tmp->cell->x - 6000) + abs(tmp->cell->y - 2000);
   calcul4 = abs(tmp->cell->x - 6000) + abs(tmp->cell->y - 4000);
-
-  //utiliser un tableau pour ordonner les valeurs
 
   tab[0] = calcul1;
   tab[1] = calcul2;
@@ -162,6 +167,18 @@ void initialize(struct lws *wsi, Pile* pile, int i)
 
 }
 
+
+void detect(struct lws *wsi, Pile *chaine)
+{
+	Cell* old = malloc(sizeof(Cell));
+	/*Sauvegarder les anciennes données nodeID, x, y et name
+	Difficultée: sauvegarder les variables pour le prochain appel à la fonction
+	Pour les données de old on regarde sur le paquet d'après si le même chien (même ID)
+	est au même endroit que sur le paquet d'avant.
+	Si il l'est, c'est notre signal pour nous dire que le chien bleu nous envoie une direction
+	Sinon, Il faut sauvegarder les nouvelles données dans old et recommencer.*/
+
+}
 
 
 int sendCommand(struct lws *wsi,unsigned char *buf,unsigned int len)
@@ -314,6 +331,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			else if (yellow == WAITING)
 			{
 				update(paquet);
+				detect(wsi, chaine);
 				
 			}
 			else if (yellow == TRACKING)
