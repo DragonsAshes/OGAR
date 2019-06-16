@@ -305,6 +305,8 @@ void update(unsigned char *paquet)
 		printNodeStack(chaine);
 }
 
+int first = 0;
+int monID;
 
 int recv_packet(unsigned char *paquet, struct lws *wsi)
 {
@@ -318,15 +320,34 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 	Si l'ID du paquet est 0x10
 		alors retenir les informations concernant notre chien
 	*/
-
-
+	
+	int i = 0;
 	switch (paquet[0])
 	{
 		case 0x10 :
 			if(yellow == INIT)
 			{
 				update(paquet);
-      			initialize(wsi, chaine, 0);
+				Pile* tmp = chaine;
+				if(first = 0)
+				{
+					tmp->cell->nodeID = monID;
+					first = 1;
+				}
+				tmp = chaine;
+				while(tmp != NULL)
+				{
+
+					if(strcmp(tmp->cell->name, "yellow") == 0 && (tmp->cell->nodeID != monID) )
+					{
+						if( (tmp->cell->x == 3000 && tmp->cell->y == 2000) || (tmp->cell->x == 3000 && tmp->cell->y == 4000) || (tmp->cell->x == 6000 && tmp->cell->y == 2000) || (tmp->cell->x == 6000 && tmp->cell->y == 4000) )
+						{
+							i++;
+						}
+					}
+					tmp = tmp->next;
+				}
+      			initialize(wsi, chaine, i);
 			}
 			else if (yellow == WAITING)
 			{
