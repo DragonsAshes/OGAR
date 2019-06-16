@@ -5,7 +5,6 @@
 int sendCommand(struct lws *wsi,unsigned char *buf,unsigned int len);
 
 
-
 typedef enum DOG
 {
   INIT,
@@ -293,11 +292,11 @@ void update(unsigned char *paquet)
 		memcpy(&removecellslength, paquet+i, sizeof(unsigned short) );
 		unsigned int removecellsID;
 		i+=2;
-    printf("%d\n", removecellslength); //removecellslength = 0 tout le temps
+    	printf("%d\n", removecellslength); //removecellslength = 0 tout le temps
 		for(int j = 0; j < removecellslength; j++)
 		{
 			memcpy(&removecellsID, paquet+i, 2);
-      printf("Cazou\n");
+      		printf("Cazou\n");
 			supressID(&chaine, removecellsID);
 			i+=4;
 
