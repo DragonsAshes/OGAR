@@ -292,7 +292,7 @@ void update(unsigned char *paquet)
 		memcpy(&removecellslength, paquet+i, sizeof(unsigned short) );
 		unsigned int removecellsID;
 		i+=2;
-    	printf("%d\n", removecellslength); //removecellslength = 0 tout le temps
+    	//printf("%d\n", removecellslength); //removecellslength = 0 tout le temps
 		for(int j = 0; j < removecellslength; j++)
 		{
 			memcpy(&removecellsID, paquet+i, 2);
@@ -319,7 +319,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 	Si l'ID du paquet est 0x10
 		alors retenir les informations concernant notre chien
 	*/
-	
+
 	int i = 0;
 	switch (paquet[0])
 	{
@@ -328,15 +328,20 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			{
 				update(paquet);
 				Pile* tmp = chaine;
-				if(first = 0)
+				/*if(first = 0)
 				{
-					tmp->cell->nodeID = monID;
+					monID = tmp->cell->nodeID;
 					first = 1;
-				}
+				}*/
+        while(tmp->next != NULL)
+        {
+          tmp = tmp->next;
+        }
+        monID = tmp->cell->nodeID;
 				tmp = chaine;
 				while(tmp != NULL)
 				{
-
+          printf("nodeID: %d // monID : %d\n", tmp->cell->nodeID, monID);
 					if(strcmp(tmp->cell->name, "yellow") == 0 && (tmp->cell->nodeID != monID) )
 					{
 						if( (tmp->cell->x == 3000 && tmp->cell->y == 2000) || (tmp->cell->x == 3000 && tmp->cell->y == 4000) || (tmp->cell->x == 6000 && tmp->cell->y == 2000) || (tmp->cell->x == 6000 && tmp->cell->y == 4000) )
@@ -352,7 +357,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			{
 				update(paquet);
 				detect(wsi, chaine);
-				
+
 			}
 			else if (yellow == TRACKING)
 			{
@@ -453,9 +458,9 @@ int main(int argc, char const *argv[])
 	signal(SIGINT, sighandler);
 
 	i.origin = "agar.io";
-	i.port = 443;
+	i.port = 2008;
 
-	if (lws_parse_uri("127.0.0.1", &protocol, &i.address, &i.port, &temp))
+	if (lws_parse_uri("192.168.130.114", &protocol, &i.address, &i.port, &temp))
 		;
 
 	if (!strcmp(protocol, "http") || !strcmp(protocol, "ws"))
