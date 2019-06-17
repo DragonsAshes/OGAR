@@ -146,15 +146,38 @@ void initialize(struct lws *wsi, Pile* pile)
 }
 
 
-void detect(struct lws *wsi, Pile *chaine)
+int detect(struct lws *wsi, Pile *chaine)
 {
-	Cell* old = malloc(sizeof(Cell));
+	static Cell old;
 	/*Sauvegarder les anciennes données nodeID, x, y et name
 	Difficultée: sauvegarder les variables pour le prochain appel à la fonction
 	Pour les données de old on regarde sur le paquet d'après si le même chien (même ID)
 	est au même endroit que sur le paquet d'avant.
 	Si il l'est, c'est notre signal pour nous dire que le chien bleu nous envoie une direction
-	Sinon, Il faut sauvegarder les nouvelles données dans old et recommencer.*/
+	Sinon, Il faut sauvegarder les nouvelles données dans old et recommencer.
+	return 1 si il voit un chien bleu statique*/
+	Pile *tmp = chaine;
+	while(tmp != NULL && strcmp(tmp->cell->name, "blue") != 0)
+	{
+		tmp = tmp->next;
+	}
+	if(tmp == NULL)
+	{
+		return 0;
+	}
+	else
+	{
+		if(tmp->cell->nodeID == old.nodeID)
+		{
+			if(tmp->cell->x == old.x && tmp->cell->y == old.y)
+			{
+				return 1;
+			}
+		}
+		memcpy(&old, tmp->cell, sizeof(Cell));
+		return 0;
+	}
+
 
 }
 
@@ -305,40 +328,37 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 		case 0x10 :
 			if(yellow == INIT)
 			{
-        printf("Update du paquet : \n");
+       			printf("Update du paquet : \n");
 				update(paquet);
 				Pile* tmp = chaine;
-				/*if(first = 0)
-				{
-					monID = tmp->cell->nodeID;
-					first = 1;
-				}*/
-        while(tmp->next != NULL)
-        {
-          tmp = tmp->next;
-        }
-        monID = tmp->cell->nodeID;
+
+		        while(tmp->next != NULL)
+		        {
+		          tmp = tmp->next;
+		        }
+		        monID = tmp->cell->nodeID;
 				tmp = chaine;
 				while(tmp != NULL)
 				{
-          printf("nodeID: %d // monID : %d\n", tmp->cell->nodeID, monID);
+		        	printf("nodeID: %d // monID : %d\n", tmp->cell->nodeID, monID);
 					if(strcmp(tmp->cell->name, "yellow") == 0 && (tmp->cell->nodeID != monID) )
 					{
 						if( (tmp->cell->x == spawnpoints[spawn_id].x && tmp->cell->y == spawnpoints[spawn_id].y))
 						{
 							spawn_id++;
-              spawn_id = spawn_id % 4;
-              printf("I = %d", spawn_id);
+		              		spawn_id = spawn_id % 4;
+		              		printf("I = %d", spawn_id);
 						}
 					}
 					tmp = tmp->next;
 				}
-      	initialize(wsi, chaine);
+		      	initialize(wsi, chaine);
 			}
 			else if (yellow == WAITING)
 			{
 				update(paquet);
-				detect(wsi, chaine);
+				if(detect(wsi, chaine))
+					yellow == TRACKING;
 
 			}
 			else if (yellow == TRACKING)
@@ -428,15 +448,20 @@ static int callbackOgar(struct lws *wsi, enum lws_callback_reasons reason, void 
 
 int main(int argc, char const *argv[])
 {
-  vecteur rdv1; rdv1.x = 3000; rdv1.y = 2000;
-  vecteur rdv2; rdv2.x = 6000; rdv2.y = 2000;
-  vecteur rdv3; rdv3.x = 3000; rdv3.y = 4000;
-  vecteur rdv4; rdv4.x = 6000; rdv4.y = 4000;
+	if(argc < 3)
+	{
+		printf("Use ./prog ip port\n");
+		return 1;
+	}
+	vecteur rdv1; rdv1.x = 3000; rdv1.y = 2000;
+	vecteur rdv2; rdv2.x = 6000; rdv2.y = 2000;
+	vecteur rdv3; rdv3.x = 3000; rdv3.y = 4000;
+	vecteur rdv4; rdv4.x = 6000; rdv4.y = 4000;
 
-  spawnpoints[0] = rdv1;
-  spawnpoints[1] = rdv2;
-  spawnpoints[2] = rdv3;
-  spawnpoints[3] = rdv4;
+	spawnpoints[0] = rdv1;
+	spawnpoints[1] = rdv2;
+	spawnpoints[2] = rdv3;
+	spawnpoints[3] = rdv4;
 
 	struct lws_context_creation_info info;
 	struct lws_client_connect_info i;
@@ -450,9 +475,9 @@ int main(int argc, char const *argv[])
 	signal(SIGINT, sighandler);
 
 	i.origin = "agar.io";
-	i.port = 2008;
+	i.port = atoi(argv[2]);
 
-	if (lws_parse_uri("192.168.130.114", &protocol, &i.address, &i.port, &temp))
+	if (lws_parse_uri(argv[1], &protocol, &i.address, &i.port, &temp))
 		;
 
 	if (!strcmp(protocol, "http") || !strcmp(protocol, "ws"))
