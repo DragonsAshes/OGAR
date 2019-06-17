@@ -4,6 +4,7 @@
 
 int sendCommand(struct lws *wsi,unsigned char *buf,unsigned int len);
 int monID;
+int spawn_id;
 
 typedef enum DOG
 {
@@ -19,6 +20,8 @@ typedef struct vecteur{
   int x;
   int y;
 }vecteur;
+
+vecteur spawnpoints[4];
 
 typedef struct Cell
 {
@@ -100,12 +103,10 @@ void trie(int* tab, size_t len)
 
 int j = 0;
 
-void initialize(struct lws *wsi, Pile* pile, int i)
+void initialize(struct lws *wsi, Pile* pile)
 {
   int calcul1, calcul2, calcul3, calcul4;
   Pile *tmp = pile;
-  vecteur position;
-  static int tab[4];
   int old;
   while(tmp != NULL)
   {
@@ -119,56 +120,24 @@ void initialize(struct lws *wsi, Pile* pile, int i)
   }*/
   if(j == 0)
   {
-    calcul1 = abs(tmp->cell->x - 3000) + abs(tmp->cell->y - 2000);
-    calcul2 = abs(tmp->cell->x - 3000) + abs(tmp->cell->y - 4000);
-    calcul3 = abs(tmp->cell->x - 6000) + abs(tmp->cell->y - 2000);
-    calcul4 = abs(tmp->cell->x - 6000) + abs(tmp->cell->y - 4000);
-
-    tab[0] = calcul1;
-    tab[1] = calcul2;
-    tab[2] = calcul3;
-    tab[3] = calcul4;
-
+    if(tmp->cell->x <= 4500 && tmp->cell->y <= 3000)
+      spawn_id = 0;
+    else if(tmp->cell->x > 4500 && tmp->cell->y <= 3000)
+      spawn_id = 1;
+    else if(tmp->cell->x > 4500 && tmp->cell->y <= 3000)
+      spawn_id = 2;
+    else if(tmp->cell->x > 4500 && tmp->cell->y > 3000)
+      spawn_id = 3;
     j = 1;
-    trie(tab, 4);
   }
 
-  if( tab[i] == calcul1 )
-  {
-    printf("calcul1\n");
-    position.x = 3000;
-    position.y = 2000;
-    move(wsi, position);
-  }
+  move(wsi, spawnpoints[spawn_id]);
 
-  else if( tab[i] == calcul2 )
-  {
-    printf("calcul2\n");
-    position.x = 3000;
-    position.y = 4000;
-    move(wsi, position);
-  }
-
-  else if( tab[i] == calcul3 )
-  {
-    printf("calcul3\n");
-    position.x = 6000;
-    position.y = 2000;
-    move(wsi, position);
-  }
-
-  else if( tab[i] == calcul4 )
-  {
-    printf("calcul4\n");
-    position.x = 6000;
-    position.y = 4000;
-    move(wsi, position);
-  }
   printf(" Cell->coord : [%d, %d]\n", tmp->cell->x, tmp->cell->y);
-  printf("Position : [%d, %d]\n", position.x, position.y);
+  printf("Position : [%d, %d]\n", spawnpoints[spawn_id].x, spawnpoints[spawn_id].y);
 
 
-  if(tmp->cell->x == position.x && tmp->cell->y == position.y)
+  if(tmp->cell->x == spawnpoints[spawn_id].x && tmp->cell->y == spawnpoints[spawn_id].y)
   {
   	yellow = WAITING;
   	printf("\n Le chien est passé en mode WAIT\n");
@@ -355,15 +324,16 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
           printf("nodeID: %d // monID : %d\n", tmp->cell->nodeID, monID);
 					if(strcmp(tmp->cell->name, "yellow") == 0 && (tmp->cell->nodeID != monID) )
 					{
-						if( (tmp->cell->x == 3000 && tmp->cell->y == 2000) || (tmp->cell->x == 3000 && tmp->cell->y == 4000) || (tmp->cell->x == 6000 && tmp->cell->y == 2000) || (tmp->cell->x == 6000 && tmp->cell->y == 4000) )
+						if( (tmp->cell->x == spawnpoints[spawn_id].x && tmp->cell->y == spawnpoints[spawn_id].y))
 						{
-							i++;
-              printf("I = %d", i);
+							spawn_id++;
+              spawn_id = spawn_id % 4;
+              printf("I = %d", spawn_id);
 						}
 					}
 					tmp = tmp->next;
 				}
-      	initialize(wsi, chaine, i);
+      	initialize(wsi, chaine);
 			}
 			else if (yellow == WAITING)
 			{
@@ -458,6 +428,16 @@ static int callbackOgar(struct lws *wsi, enum lws_callback_reasons reason, void 
 
 int main(int argc, char const *argv[])
 {
+  vecteur rdv1; rdv1.x = 3000; rdv1.y = 2000;
+  vecteur rdv2; rdv2.x = 6000; rdv2.y = 2000;
+  vecteur rdv3; rdv3.x = 3000; rdv3.y = 4000;
+  vecteur rdv4; rdv4.x = 6000; rdv4.y = 4000;
+
+  spawnpoints[0] = rdv1;
+  spawnpoints[1] = rdv2;
+  spawnpoints[2] = rdv3;
+  spawnpoints[3] = rdv4;
+
 	struct lws_context_creation_info info;
 	struct lws_client_connect_info i;
 
