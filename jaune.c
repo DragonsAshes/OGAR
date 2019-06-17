@@ -3,7 +3,7 @@
 #include <math.h>
 
 int sendCommand(struct lws *wsi,unsigned char *buf,unsigned int len);
-
+int monID;
 
 typedef enum DOG
 {
@@ -98,16 +98,18 @@ void trie(int* tab, size_t len)
   }
 }
 
+int j = 0;
+
 void initialize(struct lws *wsi, Pile* pile, int i)
 {
   int calcul1, calcul2, calcul3, calcul4;
   Pile *tmp = pile;
   vecteur position;
-  int tab[4];
+  static int tab[4];
   int old;
   while(tmp != NULL)
   {
-  	if((tmp->cell->flag & 0x8) && strcmp(tmp->cell->name, "yellow") == 0)
+  	if( monID == tmp->cell->nodeID )
   		break;
   	tmp = tmp->next;
   }
@@ -115,22 +117,25 @@ void initialize(struct lws *wsi, Pile* pile, int i)
   {
     tmp = tmp->next;
   }*/
-  calcul1 = abs(tmp->cell->x - 3000) + abs(tmp->cell->y - 2000);
-  calcul2 = abs(tmp->cell->x - 3000) + abs(tmp->cell->y - 4000);
-  calcul3 = abs(tmp->cell->x - 6000) + abs(tmp->cell->y - 2000);
-  calcul4 = abs(tmp->cell->x - 6000) + abs(tmp->cell->y - 4000);
+  if(j == 0)
+  {
+    calcul1 = abs(tmp->cell->x - 3000) + abs(tmp->cell->y - 2000);
+    calcul2 = abs(tmp->cell->x - 3000) + abs(tmp->cell->y - 4000);
+    calcul3 = abs(tmp->cell->x - 6000) + abs(tmp->cell->y - 2000);
+    calcul4 = abs(tmp->cell->x - 6000) + abs(tmp->cell->y - 4000);
 
-  tab[0] = calcul1;
-  tab[1] = calcul2;
-  tab[2] = calcul3;
-  tab[3] = calcul4;
+    tab[0] = calcul1;
+    tab[1] = calcul2;
+    tab[2] = calcul3;
+    tab[3] = calcul4;
 
-
-  trie(tab, 4);
-
+    j = 1;
+    trie(tab, 4);
+  }
 
   if( tab[i] == calcul1 )
   {
+    printf("calcul1\n");
     position.x = 3000;
     position.y = 2000;
     move(wsi, position);
@@ -138,6 +143,7 @@ void initialize(struct lws *wsi, Pile* pile, int i)
 
   else if( tab[i] == calcul2 )
   {
+    printf("calcul2\n");
     position.x = 3000;
     position.y = 4000;
     move(wsi, position);
@@ -145,6 +151,7 @@ void initialize(struct lws *wsi, Pile* pile, int i)
 
   else if( tab[i] == calcul3 )
   {
+    printf("calcul3\n");
     position.x = 6000;
     position.y = 2000;
     move(wsi, position);
@@ -152,11 +159,14 @@ void initialize(struct lws *wsi, Pile* pile, int i)
 
   else if( tab[i] == calcul4 )
   {
+    printf("calcul4\n");
     position.x = 6000;
     position.y = 4000;
     move(wsi, position);
   }
-  printf("[%d, %d]\n", tmp->cell->x, tmp->cell->y);
+  printf(" Cell->coord : [%d, %d]\n", tmp->cell->x, tmp->cell->y);
+  printf("Position : [%d, %d]\n", position.x, position.y);
+
 
   if(tmp->cell->x == position.x && tmp->cell->y == position.y)
   {
@@ -305,7 +315,7 @@ void update(unsigned char *paquet)
 }
 
 int first = 0;
-int monID;
+
 
 int recv_packet(unsigned char *paquet, struct lws *wsi)
 {
@@ -326,6 +336,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 		case 0x10 :
 			if(yellow == INIT)
 			{
+        printf("Update du paquet : \n");
 				update(paquet);
 				Pile* tmp = chaine;
 				/*if(first = 0)
@@ -347,11 +358,12 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 						if( (tmp->cell->x == 3000 && tmp->cell->y == 2000) || (tmp->cell->x == 3000 && tmp->cell->y == 4000) || (tmp->cell->x == 6000 && tmp->cell->y == 2000) || (tmp->cell->x == 6000 && tmp->cell->y == 4000) )
 						{
 							i++;
+              printf("I = %d", i);
 						}
 					}
 					tmp = tmp->next;
 				}
-      			initialize(wsi, chaine, i);
+      	initialize(wsi, chaine, i);
 			}
 			else if (yellow == WAITING)
 			{
