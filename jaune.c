@@ -149,6 +149,7 @@ void initialize(struct lws *wsi, Pile* pile)
 int detect(struct lws *wsi, Pile *chaine)
 {
 	static Cell old;
+	static int compteur = 0;
 	/*Sauvegarder les anciennes données nodeID, x, y et name
 	Difficultée: sauvegarder les variables pour le prochain appel à la fonction
 	Pour les données de old on regarde sur le paquet d'après si le même chien (même ID)
@@ -163,15 +164,27 @@ int detect(struct lws *wsi, Pile *chaine)
 	}
 	if(tmp == NULL)
 	{
+		compteur = 0;
 		return 0;
 	}
+
 	else
 	{
+		printf("New cell : [%d, %d]\n", tmp->cell->x, tmp->cell->y);
+		printf("Old Cell : [%d, %d]\n", old.x, old.y);
 		if(tmp->cell->nodeID == old.nodeID)
 		{
 			if(tmp->cell->x == old.x && tmp->cell->y == old.y)
 			{
-				return 1;
+				compteur++;
+				if(compteur == 2)
+				{
+					compteur = 0;
+					return 1;
+				}
+			}
+			else{
+				compteur = 0;
 			}
 		}
 		memcpy(&old, tmp->cell, sizeof(Cell));
@@ -221,17 +234,8 @@ int writePacket(struct lws *wsi)
 void insertion(Pile **pile, Cell *upcell){
 
     Pile *tmp = *pile;
-    while(tmp != NULL)
-    {
-    	if(tmp->cell->nodeID == upcell->nodeID)
-    	{
-    		free(tmp->cell);
-    		tmp->cell = upcell;
-    		return;
-    	}
-    	tmp = tmp->next;
-    }
-  	tmp=malloc(sizeof(Pile));
+
+  	tmpr=malloc(sizeof(Pile));
     tmp->next = *pile;
     tmp->cell = upcell;
     *pile = tmp;
@@ -266,9 +270,22 @@ void supressID(Pile **pile, unsigned int removecellsID)
 	}
 }
 
+void supressall(Pile *pile)
+{
+	Cell* delete;
+	Pile* tmp = pile;
+	while(tmp != NULL)
+	{
+		delete = tmp->cell;
+		free(tmp);
+		tmp = tmp->next;
+		free(delete);
+	}
+}
 
 void update(unsigned char *paquet)
 {
+	supressall(chaine);
 	int i;
 	unsigned short deadcellslength;
 		memcpy(&deadcellslength, paquet+1, sizeof(unsigned short));
@@ -294,7 +311,7 @@ void update(unsigned char *paquet)
 		memcpy(&removecellslength, paquet+i, sizeof(unsigned short) );
 		unsigned int removecellsID;
 		i+=2;
-    	//printf("%d\n", removecellslength); //removecellslength = 0 tout le temps
+    	/*printf("%d\n", removecellslength); //removecellslength = 0 tout le temps
 		for(int j = 0; j < removecellslength; j++)
 		{
 			memcpy(&removecellsID, paquet+i, 2);
@@ -302,7 +319,7 @@ void update(unsigned char *paquet)
 			supressID(&chaine, removecellsID);
 			i+=4;
 
-		}
+		}*/
 		printNodeStack(chaine);
 }
 
@@ -358,11 +375,15 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			{
 				update(paquet);
 				if(detect(wsi, chaine))
+				{
+					printf("Le chien passe en mode TRACKING\n");
 					yellow == TRACKING;
+				}
 
 			}
 			else if (yellow == TRACKING)
 			{
+				printf("Cazou\n");
 
 			}
 			break;
