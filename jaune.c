@@ -235,7 +235,7 @@ void insertion(Pile **pile, Cell *upcell){
 
     Pile *tmp = *pile;
 
-  	tmpr=malloc(sizeof(Pile));
+  	tmp=malloc(sizeof(Pile));
     tmp->next = *pile;
     tmp->cell = upcell;
     *pile = tmp;
@@ -270,22 +270,22 @@ void supressID(Pile **pile, unsigned int removecellsID)
 	}
 }
 
-void supressall(Pile *pile)
+void supressall(Pile **pile)
 {
-	Cell* delete;
-	Pile* tmp = pile;
-	while(tmp != NULL)
+	Pile* tmp = *pile;
+	while(*pile != NULL)
 	{
-		delete = tmp->cell;
+		tmp = *pile;
+		*pile = tmp->next;
+		free(tmp->cell->name);
+		free(tmp->cell);
 		free(tmp);
-		tmp = tmp->next;
-		free(delete);
 	}
 }
 
 void update(unsigned char *paquet)
 {
-	supressall(chaine);
+	supressall(&chaine);
 	int i;
 	unsigned short deadcellslength;
 		memcpy(&deadcellslength, paquet+1, sizeof(unsigned short));
@@ -302,6 +302,7 @@ void update(unsigned char *paquet)
 				strcpy(node->name, paquet+i);
 				i += strlen(node->name)+1;
 			}
+			printf("Contenu de la cellule : ID : %d x : %d y : %d \n",node->nodeID, node->x, node->y );
 
 			insertion(&chaine, node);
 
@@ -320,10 +321,11 @@ void update(unsigned char *paquet)
 			i+=4;
 
 		}*/
-		printNodeStack(chaine);
+		//printNodeStack(chaine);
 }
 
 int first = 0;
+int first_ID = 0;
 
 
 int recv_packet(unsigned char *paquet, struct lws *wsi)
@@ -353,13 +355,20 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 		        {
 		          tmp = tmp->next;
 		        }
-		        monID = tmp->cell->nodeID;
+		        if(first_ID == 0)
+		        {
+		        	monID = tmp->cell->nodeID;
+		        	first_ID = 1;
+				}
 				tmp = chaine;
+				Pile* pointeur = chaine; 
 				while(tmp != NULL)
 				{
 		        	printf("nodeID: %d // monID : %d\n", tmp->cell->nodeID, monID);
+		        	printf("%s\n",tmp->cell->name);
 					if(strcmp(tmp->cell->name, "yellow") == 0 && (tmp->cell->nodeID != monID) )
 					{
+						printf("x : %d / %d // y : %d / %d",tmp->cell->x,spawnpoints[spawn_id].x,tmp->cell->y, spawnpoints[spawn_id].y  );
 						if( (tmp->cell->x == spawnpoints[spawn_id].x && tmp->cell->y == spawnpoints[spawn_id].y))
 						{
 							spawn_id++;
