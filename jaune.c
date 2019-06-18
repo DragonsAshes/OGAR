@@ -180,7 +180,7 @@ int detect(struct lws *wsi, Pile *chaine)
 				if(compteur == 2)
 				{
 					compteur = 0;
-					return 1;
+					return 1; //retun tmp->cell->nodeID
 				}
 			}
 			else{
@@ -324,6 +324,23 @@ void update(unsigned char *paquet)
 		//printNodeStack(chaine);
 }
 
+void take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
+{
+	Pile* tmp = chaine;
+	vecteur direction;
+	while(tmp != NULL && tmp->cell->nodeID != scout_ID)
+	{
+		tmp = tmp->next;
+	}
+	if(tmp == NULL)
+		return;
+	direction.x == tmp->cell->x;
+	direction.y == tmp->cell->y;
+	//Faire en sorte de calculer qu'une seule fois la direction
+	move(wsi, direction);
+}
+
+
 int first = 0;
 int first_ID = 0;
 
@@ -340,7 +357,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 	Si l'ID du paquet est 0x10
 		alors retenir les informations concernant notre chien
 	*/
-
+	int scout_ID;
 	int i = 0;
 	switch (paquet[0])
 	{
@@ -383,6 +400,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			else if (yellow == WAITING)
 			{
 				update(paquet);
+				//scout_ID = detect(wsi, chaine);
 				if(detect(wsi, chaine))
 				{
 					printf("Le chien passe en mode TRACKING\n");
@@ -392,6 +410,8 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			}
 			else if (yellow == TRACKING)
 			{
+				update(paquet);
+				take_direction(wsi, chaine, scout_ID);
 				printf("Cazou\n");
 
 			}
