@@ -221,6 +221,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			}
 			else if (blue == SEARCH)
 			{
+				printf("SEARCH\n");
 				update(paquet);
 
 			}
