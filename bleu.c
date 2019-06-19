@@ -184,6 +184,106 @@ void update(unsigned char *paquet)
 		//printNodeStack(chaine);
 }
 
+void parcours(struct lws *wsi, Pile* chaine)
+{
+	static int mode;
+	static int etape = 0;
+	Pile* tmp = chaine;
+	vecteur destination;
+	while(tmp->cell->nodeID != monID)
+		tmp = tmp->next;
+
+	if(tmp->cell->x == 1000 && tmp->cell->y == 1000)
+		mode = 1;
+
+	else if(tmp->cell->x == 8000 && tmp->cell->y == 5000)
+		mode = 2;
+
+	if(etape == 0)
+	{
+		if(mode == 1)
+		{
+			destination.x = 8000;
+			destination.y = 1000;
+		}
+		else if(mode == 2)
+		{
+			destination.x = 1000;
+			destination.y = 5000;
+		}
+		move(wsi, destination);
+		if((tmp->cell->x == 8000 && mode == 1) || (tmp->cell->x == 1000 && mode == 2))
+			etape = 1;
+
+	}
+	else if(etape == 1)
+	{
+		if(mode == 1)
+		{
+			destination.x = 8000;
+			destination.y = 3000;
+		}
+		else if(mode == 2)
+		{
+			destination.x = 1000;
+			destination.y = 3000;
+		}
+		move(wsi, destination);
+		if(tmp->cell->y == 3000)
+			etape = 2;
+	}
+	else if(etape == 2)
+	{
+		if(mode == 1)
+		{
+			destination.x = 1000;
+			destination.y = 3000;
+		}
+		else if(mode == 2)
+		{
+			destination.x = 8000;
+			destination.y = 3000; 
+		}
+		move(wsi, destination);
+		if((tmp->cell->x == 1000 && mode == 1) || (tmp->cell->x == 8000 && mode == 2))
+			etape = 3;
+	}
+	else if(etape == 3)
+	{
+		if(mode == 1)
+		{
+			destination.x = 1000;
+			destination.y = 5000;
+		}
+		else if (mode == 2)
+		{
+			destination.x = 8000;
+			destination.y = 1000;
+		}
+		move(wsi, destination);
+		if((tmp->cell->y == 5000 && mode == 1) || (tmp->cell->y == 1000 && mode == 2))
+			etape = 4;
+	}
+	else if(etape == 4)
+	{
+		if(mode == 1)
+		{
+			destination.x = 8000;
+			destination.y = 5000;
+		}
+		else if (mode == 2)
+		{
+			destination.x = 1000;
+			destination.y = 1000;
+		}
+		move(wsi, destination);
+		if((tmp->cell->x == 8000 && mode == 1) || (tmp->cell->x == 1000 && mode == 2))
+			etape = 0;
+	}
+
+}
+
+
 int first_ID = 0;
 int recv_packet(unsigned char *paquet, struct lws *wsi)
 {
@@ -221,9 +321,8 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			}
 			else if (blue == SEARCH)
 			{
-				printf("SEARCH\n");
 				update(paquet);
-
+				parcours(wsi, chaine);
 			}
 	}
 }
