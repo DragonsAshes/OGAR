@@ -6,11 +6,13 @@ int sendCommand(struct lws *wsi,unsigned char *buf,unsigned int len);
 int monID;
 int spawn_id;
 
+
 typedef enum DOG
 {
   INIT,
   WAITING,
   FOLLOWING,
+  SEARCHING,
   TRACKING,
 } DOG;
 //Peut etre besoin d'un 4eme status pour le retour d'un chien jaune à sa base (peut peut etre recorrespondre à l'initalisation)
@@ -23,6 +25,7 @@ typedef struct vecteur{
 }vecteur;
 
 vecteur spawnpoints[4];
+vecteur direction;
 
 typedef struct Cell
 {
@@ -272,6 +275,7 @@ void supressID(Pile **pile, unsigned int removecellsID)
 	}
 }
 
+
 void supressall(Pile **pile)
 {
 	Pile* tmp = *pile;
@@ -322,52 +326,151 @@ void update(unsigned char *paquet)
 int first_dir = 0;
 vecteur take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
 {
+	int distance = 0;
+	int hyp = 0;
+	int x;
+	int y;
+	printf("Take direction\n");
+	printf("ID : %d\n",scout_ID );
 	Pile* tmp = chaine;
-	vecteur direction;
+	vecteur position;
+	
 	vecteur actual_pos;
 	int delta_x, delta_y;
 	while(tmp != NULL && tmp->cell->nodeID != monID)
 		tmp = tmp->next;
 	actual_pos.x = tmp->cell->x;
 	actual_pos.y = tmp->cell->y;
+	
 	tmp = chaine;
 
 	while(tmp != NULL && tmp->cell->nodeID != scout_ID)
 		tmp = tmp->next;
+
 	if(tmp == NULL)
 		return direction;
 
 	if(tmp->cell->x == actual_pos.x && tmp->cell->y == actual_pos.y)
 		return direction;
+	printf("delta\n");
+	
+	/*distance = pow( (tmp->cell->x - actual_pos.x), 2) + pow( (tmp->cell->y - actual_pos.y), 2);
+	hyp = sqrt(distance);
+	printf("\n\n\n\n HYPOTHENUSE : %d \n\n\n\n", hyp);*/
+	x = tmp->cell->x;
+	y = tmp->cell->y;
 
-	delta_x = tmp->cell->x - actual_pos.x;
-	delta_y = tmp->cell->x - actual_pos.y;
+	if (x < (actual_pos.x-20) || x > (actual_pos.x+20))
+	{
+		delta_x = tmp->cell->x - actual_pos.x;
+		delta_y = tmp->cell->y - actual_pos.y;
 
-	direction.x = actual_pos.x + delta_x*10000;
-	direction.y = actual_pos.y + delta_y*10000;
+		printf("%d ///// %d \n", delta_x, delta_y);
 
-	//Faire en sorte de calculer qu'une seule fois la direction
-	move(wsi, direction);
-	yellow == TRACKING;
+		//direction.x = actual_pos.x + delta_x*100;
+		//direction.y = actual_pos.y + delta_y*100;
+		direction.x = delta_x;
+		direction.y = delta_y;
+		position.x = actual_pos.x + delta_x;
+		position.y = actual_pos.y + delta_y;
+		move(wsi, position);
+		printf("%d ///// %d \n", position.x, position.y);
+		yellow = SEARCHING;	
+	}
+
+	else if (y < (actual_pos.y-20) || y > (actual_pos.y+20))
+	{
+		delta_x = tmp->cell->x - actual_pos.x;
+		delta_y = tmp->cell->y - actual_pos.y;
+
+		printf("%d ///// %d \n", delta_x, delta_y);
+
+		//direction.x = actual_pos.x + delta_x*100;
+		//direction.y = actual_pos.y + delta_y*100;
+		direction.x = delta_x;
+		direction.y = delta_y;
+		position.x = actual_pos.x + delta_x;
+		position.y = actual_pos.y + delta_y;
+		move(wsi, position);
+		printf("%d ///// %d \n", position.x, position.y);
+		yellow = SEARCHING;	
+	}
+	
 	return(direction);
 }
 
 
-void mouton_here(struct lws *wsi, Pile *chaine, vecteur direction)
+int mouton_here(struct lws *wsi, Pile *chaine, vecteur direction)
 {
 	Pile *tmp = chaine;
+	vecteur position;
+	while(tmp->cell->nodeID != monID)
+		tmp = tmp->next;
+
+	position.x = tmp->cell->x + direction.x;
+	position.y = tmp->cell->y + direction.y;
+
+	tmp = chaine;
+
+
+
 	while(tmp != NULL && strncmp("bot", tmp->cell->name, 3) != 0)
 		tmp = tmp->next;
 
 	if(tmp == NULL)
 	{
-		move(wsi, direction);
-		return;
+		//position.x += direction.x;
+		//position.y += direction.y;
+		printf("Searching mouton null\n");
+		move(wsi, position);
+		return 0;
 	}
-
-
+	else
+	{
+		direction.x = tmp->cell->x;
+		direction.y = tmp->cell->y;
+		move(wsi, direction);
+		yellow = TRACKING;
+		return 1;
+	}
 }
 
+
+void push(struct lws* wsi, Pile *pile)
+{
+	vecteur position;
+	vecteur direction;
+	int teta;
+	int x, y;
+	Pile *tmp = pile;
+	while(tmp != NULL && strncmp("bot", tmp->cell->name, 3) != 0)
+		tmp = tmp->next;
+	if(tmp == NULL)
+		return;
+
+	position.x = tmp->cell->x;
+	position.y = tmp->cell->y;
+
+	teta = atanf ( (float) (position.y - 3000) / ((float) (position.x)));
+	x = cosf(teta) *50;
+	y = sinf(teta) *50;
+	direction.x = (int) (position.x + x);
+	direction.y = (int) (position.y + y);
+
+	if (direction.x < 0+32 )
+		direction.x = 32;
+	if (direction.x > 9000-32)
+		direction.x = 9000-32;
+	if(direction.y < 0+32)
+		direction.y = 32;
+	if (direction.y > 6000-32)
+		direction.y = 6000-32;
+	move(wsi, direction);
+	if ( (position.x < 636) && (position.y > 2364 && position.y < 3636))
+	{
+		yellow = INIT;
+	}
+}
 
 
 
@@ -388,7 +491,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 		alors retenir les informations concernant notre chien
 	*/
 	vecteur dir;
-	int scout_ID;
+	static int scout_ID;
 	int i = 0;
 	switch (paquet[0])
 	{
@@ -435,21 +538,30 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 				if(scout_ID)
 				{
 					printf("Le chien passe en mode FOLLOWING\n");
-					yellow == FOLLOWING;
+					yellow = FOLLOWING;
 				}
 
 			}
 			else if (yellow == FOLLOWING)
 			{
 				update(paquet);
+				printf("entry : %d", scout_ID);
 				dir = take_direction(wsi, chaine, scout_ID);
 				printf("Cazou\n");
 
 			}
-			else if (yellow == TRACKING)
+			else if (yellow == SEARCHING)
 			{
+				printf("Search.......\n");
 				update(paquet);
 				mouton_here(wsi, chaine, dir);
+			}
+			else if (yellow == TRACKING)
+			{
+				printf("\n TRACK!!\n");
+				update(paquet);
+				push(wsi, chaine);
+
 			}
 			break;
 
@@ -497,9 +609,6 @@ static int callbackOgar(struct lws *wsi, enum lws_callback_reasons reason, void 
 			// we have receive some data, check with websocket API if this is a final fragment
 			if (lws_is_final_fragment(wsi)) {
 				// call recv function here
-				for(int i = 0; i < offset; i++)
-					printf(" 0x%x", rbuf[i]);
-				printf("\n---------------------------------------\n");
 				recv_packet(rbuf, wsi);
 
 				offset=0;
