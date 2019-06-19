@@ -283,22 +283,6 @@ void parcours(struct lws *wsi, Pile* chaine)
 
 }
 
-void detect(struct lws *wsi, Pile *chaine)
-{
-	Pile* tmp = chaine;
-	vecteur bot_pos;
-	while(tmp != NULL && strncmp("bot", tmp->cell->name, 3) != 0)
-		tmp = tmp->next;
-	if (tmp == NULL)
-		return;
-	bot_pos.x = tmp->cell->x;
-	bot_pos.y = tmp->cell->y;
-	move(wsi, bot_pos);
-	blue = GIVE;
-
-}
-
-
 
 int first_ID = 0;
 int recv_packet(unsigned char *paquet, struct lws *wsi)
@@ -339,12 +323,6 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			{
 				update(paquet);
 				parcours(wsi, chaine);
-				detect(wsi, chaine);
-			}
-			else if (blue == GIVE)
-			{
-				update(paquet);
-				printf("BLUE GIVE\n");
 			}
 	}
 }
