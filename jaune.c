@@ -360,7 +360,7 @@ vecteur take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
 	x = tmp->cell->x;
 	y = tmp->cell->y;
 
-	if (x < (actual_pos.x-20) || x > (actual_pos.x+20))
+	if (x < (actual_pos.x-20) || x > (actual_pos.x+20))
 	{
 		delta_x = tmp->cell->x - actual_pos.x;
 		delta_y = tmp->cell->y - actual_pos.y;
