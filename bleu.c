@@ -286,6 +286,8 @@ void parcours(struct lws *wsi, Pile* chaine)
 void give(struct lws *wsi, Pile* chaine)
 {
 	vecteur* position;
+	vecteur direction;
+	vecteur delta;
 	position[0].x = 3000;
 	position[0].y = 2000;
 	position[1].x = 6000;
@@ -312,7 +314,11 @@ void give(struct lws *wsi, Pile* chaine)
 		else
 			i = 2;
 	}
-	move(wsi, position[i]);
+	delta.x = (tmp->cell->x - position[i].x)/100;
+	delta.y = (tmp->cell->y - position[i].y)/100;
+	direction.x = tmp->cell->x + delta.x;
+	direction.y = tmp->cell->x + delta.y;
+	move(wsi, direction);
 }
 
 void detect(struct lws *wsi, Pile *chaine) 
