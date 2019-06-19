@@ -10,6 +10,7 @@ typedef enum DOG
 {
   INIT,
   WAITING,
+  FOLLOWING,
   TRACKING,
 } DOG;
 //Peut etre besoin d'un 4eme status pour le retour d'un chien jaune à sa base (peut peut etre recorrespondre à l'initalisation)
@@ -150,14 +151,15 @@ int detect(struct lws *wsi, Pile *chaine)
 {
 	static Cell old;
 	static int compteur = 0;
-	/*Sauvegarder les anciennes données nodeID, x, y et name
-	Difficultée: sauvegarder les variables pour le prochain appel à la fonction
-	Pour les données de old on regarde sur le paquet d'après si le même chien (même ID)
-	est au même endroit que sur le paquet d'avant.
-	Si il l'est, c'est notre signal pour nous dire que le chien bleu nous envoie une direction
-	Sinon, Il faut sauvegarder les nouvelles données dans old et recommencer.
-	return 1 si il voit un chien bleu statique*/
 	Pile *tmp = chaine;
+	vecteur actual_pos;
+	
+	while(tmp != NULL && monID != tmp->cell->nodeID)
+		tmp = tmp->next;
+	actual_pos.x = tmp->cell->x;
+	actual_pos.y = tmp->cell->y;
+
+	tmp = chaine;
 	while(tmp != NULL && strcmp(tmp->cell->name, "blue") != 0)
 	{
 		tmp = tmp->next;
@@ -174,13 +176,13 @@ int detect(struct lws *wsi, Pile *chaine)
 		printf("Old Cell : [%d, %d]\n", old.x, old.y);
 		if(tmp->cell->nodeID == old.nodeID)
 		{
-			if(tmp->cell->x == old.x && tmp->cell->y == old.y)
+			if(tmp->cell->x == actual_pos.x && tmp->cell->y == actual_pos.y)
 			{
 				compteur++;
 				if(compteur == 2)
 				{
 					compteur = 0;
-					return 1; //retun tmp->cell->nodeID
+					return tmp->cell->nodeID;
 				}
 			}
 			else{
@@ -312,33 +314,61 @@ void update(unsigned char *paquet)
 		memcpy(&removecellslength, paquet+i, sizeof(unsigned short) );
 		unsigned int removecellsID;
 		i+=2;
-    	/*printf("%d\n", removecellslength); //removecellslength = 0 tout le temps
-		for(int j = 0; j < removecellslength; j++)
-		{
-			memcpy(&removecellsID, paquet+i, 2);
-      		printf("Cazou\n");
-			supressID(&chaine, removecellsID);
-			i+=4;
 
-		}*/
 		//printNodeStack(chaine);
 }
 
-void take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
+
+int first_dir = 0;
+vecteur take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
 {
 	Pile* tmp = chaine;
 	vecteur direction;
-	while(tmp != NULL && tmp->cell->nodeID != scout_ID)
-	{
+	vecteur actual_pos;
+	int delta_x, delta_y;
+	while(tmp != NULL && tmp->cell->nodeID != monID)
 		tmp = tmp->next;
-	}
+	actual_pos.x = tmp->cell->x;
+	actual_pos.y = tmp->cell->y;
+	tmp = chaine;
+
+	while(tmp != NULL && tmp->cell->nodeID != scout_ID)
+		tmp = tmp->next;
 	if(tmp == NULL)
-		return;
-	direction.x == tmp->cell->x;
-	direction.y == tmp->cell->y;
+		return direction;
+
+	if(tmp->cell->x == actual_pos.x && tmp->cell->y == actual_pos.y)
+		return direction;
+
+	delta_x = tmp->cell->x - actual_pos.x;
+	delta_y = tmp->cell->x - actual_pos.y;
+
+	direction.x = actual_pos.x + delta_x*10000;
+	direction.y = actual_pos.y + delta_y*10000;
+
 	//Faire en sorte de calculer qu'une seule fois la direction
 	move(wsi, direction);
+	yellow == TRACKING;
+	return(direction);
 }
+
+
+void mouton_here(struct lws *wsi, Pile *chaine, vecteur direction)
+{
+	Pile *tmp = chaine;
+	while(tmp != NULL && strncmp("bot", tmp->cell->name, 3) != 0)
+		tmp = tmp->next;
+
+	if(tmp == NULL)
+	{
+		move(wsi, direction);
+		return;
+	}
+
+
+}
+
+
 
 
 int first = 0;
@@ -357,6 +387,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 	Si l'ID du paquet est 0x10
 		alors retenir les informations concernant notre chien
 	*/
+	vecteur dir;
 	int scout_ID;
 	int i = 0;
 	switch (paquet[0])
@@ -400,20 +431,25 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			else if (yellow == WAITING)
 			{
 				update(paquet);
-				//scout_ID = detect(wsi, chaine);
-				if(detect(wsi, chaine))
+				scout_ID = detect(wsi, chaine);
+				if(scout_ID)
 				{
-					printf("Le chien passe en mode TRACKING\n");
-					yellow == TRACKING;
+					printf("Le chien passe en mode FOLLOWING\n");
+					yellow == FOLLOWING;
 				}
+
+			}
+			else if (yellow == FOLLOWING)
+			{
+				update(paquet);
+				dir = take_direction(wsi, chaine, scout_ID);
+				printf("Cazou\n");
 
 			}
 			else if (yellow == TRACKING)
 			{
 				update(paquet);
-				take_direction(wsi, chaine, scout_ID);
-				printf("Cazou\n");
-
+				mouton_here(wsi, chaine, dir);
 			}
 			break;
 
