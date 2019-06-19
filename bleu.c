@@ -371,6 +371,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			{
 				update(paquet);
 				parcours(wsi, chaine);
+				detect(wsi, chaine);
 			}
 			else if (blue == GIVE)
 			{
