@@ -149,7 +149,8 @@ void initialize(struct lws *wsi, Pile* pile)
 	printf("Cazou\n");
 	move(wsi, spawnpoints[spawn_id]);
 
-	if(tmp->cell->x == spawnpoints[spawn_id].x && tmp->cell->y == spawnpoints[spawn_id].y)
+	//if(tmp->cell->x == spawnpoints[spawn_id].x && tmp->cell->y == spawnpoints[spawn_id].y)
+	if((tmp->cell->x == 1000 && tmp->cell->y == 1000) || (tmp->cell->x == 8000 && tmp->cell->y == 5000))
 		blue = SEARCH;
 }
 
