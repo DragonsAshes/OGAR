@@ -557,11 +557,12 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 					tmp = tmp->next;
 				}
 		      	initialize(wsi, chaine);
+		      	doublon(wsi, chaine);
 			}
 			else if (yellow == WAITING)
 			{
 				update(paquet);
-				doublon(wsi, chaine);
+				
 				scout_ID = detect(wsi, chaine);
 				if(scout_ID)
 				{
