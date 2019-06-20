@@ -409,7 +409,7 @@ int mouton_here(struct lws *wsi, Pile *chaine)
 		//position.x += direction.x;
 		//position.y += direction.y;
 		printf("%d ** Searching mouton null\n",__LINE__);
-		if(chienjaune.x < 35 || chienjaune.x > 7965 || chienjaune.y < 35 || chienjaune.y > 5965)
+		if(chienjaune.x < 35 || chienjaune.x > 8965 || chienjaune.y < 35 || chienjaune.y > 5965)
 			yellow = INIT;
 
 		move(wsi, position);
@@ -520,10 +520,11 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			{
        			printf("Update du paquet : \n");
 				update(paquet);
+				//doublon(wsi, chaine);
 
 				Pile* tmp = chaine;
 
-				/*while(tmp != NULL)
+				while(tmp != NULL)
 				{
 					if(strncmp(tmp->cell->name, "bot", 3) == 0)
 						break;
@@ -532,7 +533,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 				if(tmp != NULL)
 					yellow = TRACKING;
 
-				tmp = chaine;*/
+				tmp = chaine;
 
 		        while(tmp->next != NULL)
 		        {
@@ -570,7 +571,9 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			else if (yellow == WAITING)
 			{
 				update(paquet);
+
 				Pile* tmp = chaine;
+				
 				while(tmp != NULL)
 				{
 					if(strcmp(tmp->cell->name, "yellow") == 0 && tmp->cell->nodeID != monID)
@@ -585,6 +588,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 					}
 					tmp = tmp->next;
 				}
+
 				
 				scout_ID = detect(wsi, chaine, "blue");
 				if(scout_ID && yellow != INIT)
