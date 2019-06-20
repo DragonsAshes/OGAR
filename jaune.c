@@ -383,6 +383,7 @@ int mouton_here(struct lws *wsi, Pile *chaine)
 {
 	Pile *tmp = chaine;
 	vecteur position;
+	vecteur chienjaune;
 	while(tmp->cell->nodeID != monID)
 		tmp = tmp->next;
 
@@ -402,6 +403,9 @@ int mouton_here(struct lws *wsi, Pile *chaine)
 		//position.x += direction.x;
 		//position.y += direction.y;
 		printf("%d ** Searching mouton null\n",__LINE__);
+		if(chienjaune.x < 35 || chienjaune.x > 7965 || chienjaune.y < 35 || chienjaune.y > 5965)
+			yellow = INIT;
+
 		move(wsi, position);
 		return 0;
 	}
