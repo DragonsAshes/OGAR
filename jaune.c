@@ -523,10 +523,9 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 				{
 					if(strncmp(tmp->cell->name, "bot", 3) == 0)
 						break;
+					tmp = tmp->next;
 				}
-				if(tmp == NULL)
-					break;
-				else
+				if(tmp != NULL)
 					yellow = TRACKING;
 
 				tmp = chaine;
