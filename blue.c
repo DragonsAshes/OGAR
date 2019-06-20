@@ -587,12 +587,13 @@ void recv_func(unsigned char *rbuf, struct lws *wsi)
 
 							upcell->nodeID=rbuf[curs_tab];
 							memcpy(&upcell->x,&rbuf[curs_tab+4],4);
-							memcpy(&upcell->y,&rbuf[curs_tab+8],4);
+							memcpy(&upcell->y,&rbuf[curs_tab+8],4);				
 						}
+						compteurpack=1;
 						if (mout_find->cell->x == upcell->x && mout_find->cell->y==upcell->y)
 						{
 							compteurpack++;
-							if (compteurpack==2)
+							if (compteurpack==3)
 							{
 								compteurpack=0;
 								if (upcell->x>Xlimenclos || (upcell->y<YlimHautenclos || upcell->y<YlimBasenclos))
