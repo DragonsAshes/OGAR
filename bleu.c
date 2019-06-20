@@ -132,7 +132,10 @@ void initialize(struct lws *wsi, Pile* pile)
 	int calcul1, calcul2;
 	Pile *tmp = pile;
 	while(tmp != NULL && monID != tmp->cell->nodeID)
+	{
+		printf("ID :: %d // %d\n", monID, tmp->cell->nodeID);
 		tmp = tmp->next;
+	}
 	
 
 	if(tmp == NULL )
@@ -150,6 +153,7 @@ void initialize(struct lws *wsi, Pile* pile)
 	move(wsi, spawnpoints[spawn_id]);
 
 	//if(tmp->cell->x == spawnpoints[spawn_id].x && tmp->cell->y == spawnpoints[spawn_id].y)
+	printf("CELLULE : %d, %d \n", tmp->cell->x, tmp->cell->y);
 	if((tmp->cell->x == 1000 && tmp->cell->y == 1000) || (tmp->cell->x == 8000 && tmp->cell->y == 5000))
 		blue = SEARCH;
 }
@@ -419,6 +423,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 					}
 					tmp = tmp->next;
 				}
+				printf("\n RIP \n");
 				initialize(wsi, chaine);
 
 			}

@@ -15,7 +15,7 @@ typedef enum DOG
   SEARCHING,
   TRACKING,
 } DOG;
-//Peut etre besoin d'un 4eme status pour le retour d'un chien jaune à sa base (peut peut etre recorrespondre à l'initalisation)
+
 
 DOG yellow = INIT;
 
@@ -120,10 +120,7 @@ void initialize(struct lws *wsi, Pile* pile)
   }
   if(tmp == NULL)
   	return;
-  /*while(strcmp(tmp->cell->name, "yellow") != 0)
-  {
-    tmp = tmp->next;
-  }*/
+
   if(j == 0)
   {
     if(tmp->cell->x <= 4500 && tmp->cell->y <= 3000)
@@ -356,9 +353,7 @@ void take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
 		return;
 	printf("delta\n");
 	
-	/*distance = pow( (tmp->cell->x - actual_pos.x), 2) + pow( (tmp->cell->y - actual_pos.y), 2);
-	hyp = sqrt(distance);
-	printf("\n\n\n\n HYPOTHENUSE : %d \n\n\n\n", hyp);*/
+	
 	x = tmp->cell->x;
 	y = tmp->cell->y;
 
@@ -370,8 +365,7 @@ void take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
 
 		printf("%d ///// %d \n", delta_x, delta_y);
 
-		//direction.x = actual_pos.x + delta_x*100;
-		//direction.y = actual_pos.y + delta_y*100;
+		
 		direction.x = delta_x;
 		direction.y = delta_y;
 		position.x = actual_pos.x + delta_x;
@@ -459,6 +453,35 @@ void push(struct lws* wsi, Pile *pile)
 	}
 }
 
+void doublon(struct lws *wsi, Pile *chaine)
+{
+	Pile* tmp = chaine;
+	vecteur destination;
+
+	while(tmp != NULL)
+	{
+		if( strcmp(tmp->cell->name, "yellow") == 0 && tmp->cell->nodeID != monID)
+			break;
+
+		tmp = tmp->next;
+	}
+	if(tmp == NULL)
+		return;
+
+	if(monID < tmp->cell->nodeID)
+	{
+		destination.x = tmp->cell->x + 100;
+		destination.y = tmp->cell->y + 100;
+		move(wsi, destination);
+		yellow = INIT;
+	}
+	else
+		return;
+
+}
+
+
+
 
 
 int first = 0;
@@ -521,6 +544,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			else if (yellow == WAITING)
 			{
 				update(paquet);
+				doublon(wsi, chaine);
 				scout_ID = detect(wsi, chaine);
 				if(scout_ID)
 				{
