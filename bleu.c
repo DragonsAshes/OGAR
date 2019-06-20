@@ -283,21 +283,59 @@ void parcours(struct lws *wsi, Pile* chaine)
 
 }
 
-void detect(struct lws *wsi, Pile *chaine)
+void give(struct lws *wsi, Pile* chaine)
 {
+	vecteur* position;
+	vecteur direction;
+	vecteur delta;
+	position[0].x = 3000;
+	position[0].y = 2000;
+	position[1].x = 6000;
+	position[1].y = 2000;
+	position[2].x = 6000;
+	position[2].y = 4000;
+	position[3].x = 3000;
+	position[3].y = 4000;
 	Pile* tmp = chaine;
-	vecteur bot_pos;
-	while(tmp != NULL && strncmp("bot", tmp->cell->name, 3) != 0)
+	int i;
+	while(monID != tmp->cell->nodeID)
 		tmp = tmp->next;
-	if (tmp == NULL)
-		return;
-	bot_pos.x = tmp->cell->x;
-	bot_pos.y = tmp->cell->y;
-	move(wsi, bot_pos);
-	blue = GIVE;
-
+	if( tmp->cell->x <= 4500 )
+	{
+		if(tmp->cell->y <= 3000)
+			i = 0;
+		else
+			i = 3;
+	}
+	else
+	{
+		if(tmp->cell->y <= 3000)
+			i = 1;
+		else
+			i = 2;
+	}
+	delta.x = (tmp->cell->x - position[i].x)/100;
+	delta.y = (tmp->cell->y - position[i].y)/100;
+	direction.x = tmp->cell->x + delta.x;
+	direction.y = tmp->cell->x + delta.y;
+	move(wsi, direction);
 }
 
+void detect(struct lws *wsi, Pile *chaine) 
+{ 
+	Pile* tmp = chaine; 
+	vecteur bot_pos; 
+	while(tmp != NULL && strncmp("bot", tmp->cell->name, 3) != 0) 
+		tmp = tmp->next; 
+	if (tmp == NULL) 
+		return; 
+	bot_pos.x = tmp->cell->x; 
+	bot_pos.y = tmp->cell->y; 
+	move(wsi, bot_pos); 
+	blue = GIVE; 
+ 
+} 
+ 
 
 void give(struct lws *wsi, Pile *chaine)
 {
@@ -351,6 +389,8 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 				update(paquet);
 				give(wsi, chaine);
 				printf("BLUE GIVE\n");
+				give(wsi, chaine);
+
 			}
 	}
 }
