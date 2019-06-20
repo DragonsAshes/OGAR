@@ -149,7 +149,7 @@ void initialize(struct lws *wsi, Pile* pile)
 }
 
 
-int detect(struct lws *wsi, Pile *chaine)
+int detect(struct lws *wsi, Pile *chaine, char* nom)
 {
 	static Cell old;
 	static int compteur = 0;
@@ -162,7 +162,7 @@ int detect(struct lws *wsi, Pile *chaine)
 	actual_pos.y = tmp->cell->y;
 
 	tmp = chaine;
-	while(tmp != NULL && strcmp(tmp->cell->name, "blue") != 0)
+	while(tmp != NULL && strncmp(tmp->cell->name, nom,3) != 0)
 	{
 		tmp = tmp->next;
 	}
@@ -519,7 +519,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 
 				Pile* tmp = chaine;
 
-				while(tmp != NULL)
+				/*while(tmp != NULL)
 				{
 					if(strncmp(tmp->cell->name, "bot", 3) == 0)
 						break;
@@ -528,7 +528,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 				if(tmp != NULL)
 					yellow = TRACKING;
 
-				tmp = chaine;
+				tmp = chaine;*/
 
 		        while(tmp->next != NULL)
 		        {
@@ -558,14 +558,32 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 					tmp = tmp->next;
 				}
 		      	initialize(wsi, chaine);
+		      	int mouton = detect(wsi, chaine, "bot");
+		      	if(mouton != 0)
+		      		yellow = TRACKING;
 		      	//doublon(wsi, chaine);
 			}
 			else if (yellow == WAITING)
 			{
 				update(paquet);
+				Pile* tmp = chaine;
+				while(tmp != NULL)
+				{
+					if(strcmp(tmp->cell->name, "blue") == 0 && tmp->cell->nodeID != monID)
+					{
+						if(monID < tmp->cell->nodeID)
+						{
+							dir.x = tmp->cell->nodeID + 50;
+							dir.x = tmp->cell->nodeID +50;
+							move(wsi, dir);
+							yellow = INIT;
+						}
+					}
+					tmp = tmp->next;
+				}
 				
-				scout_ID = detect(wsi, chaine);
-				if(scout_ID)
+				scout_ID = detect(wsi, chaine, "blue");
+				if(scout_ID && yellow != INIT)
 				{
 					printf("Le chien passe en mode FOLLOWING\n");
 					yellow = FOLLOWING;
