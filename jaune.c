@@ -387,6 +387,8 @@ int mouton_here(struct lws *wsi, Pile *chaine)
 	while(tmp->cell->nodeID != monID)
 		tmp = tmp->next;
 
+	chienjaune.x = tmp->cell->x;
+	chienjaune.y = tmp->cell->y;
 	position.x = tmp->cell->x + direction.x;
 	position.y = tmp->cell->y + direction.y;
 	printf("direction : %d %d \n", direction.x, direction.y);
@@ -514,8 +516,20 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			{
        			printf("Update du paquet : \n");
 				update(paquet);
+
 				Pile* tmp = chaine;
 
+				while(tmp != NULL)
+				{
+					if(strncmp(tmp->cell->name, "bot", 3) == 0)
+						break;
+				}
+				if(tmp == NULL)
+					break;
+				else
+					yellow = TRACKING;
+
+				tmp = chaine;
 		        while(tmp->next != NULL)
 		        {
 		          tmp = tmp->next;
