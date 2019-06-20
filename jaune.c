@@ -362,29 +362,8 @@ void take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
 	x = tmp->cell->x;
 	y = tmp->cell->y;
 
-<<<<<<< HEAD
+
 	if(x < actual_pos.x-50 || x > actual_pos.x+50 || y < actual_pos.y-50 || y > actual_pos.y+50)
-=======
-	if (x < (actual_pos.x-20) || x > (actual_pos.x+20))
-	{
-		delta_x = tmp->cell->x - actual_pos.x;
-		delta_y = tmp->cell->y - actual_pos.y;
-
-		printf("%d ///// %d \n", delta_x, delta_y);
-
-		//direction.x = actual_pos.x + delta_x*100;
-		//direction.y = actual_pos.y + delta_y*100;
-		direction.x = delta_x;
-		direction.y = delta_y;
-		position.x = actual_pos.x + delta_x;
-		position.y = actual_pos.y + delta_y;
-		move(wsi, position);
-		printf("%d ///// %d \n", position.x, position.y);
-		yellow = SEARCHING;	
-	}
-
-	else if (y < (actual_pos.y-20) || y > (actual_pos.y+20))
->>>>>>> ce397eb1de8174a3090036b551fc81c57ec2ab74
 	{
 		delta_x = tmp->cell->x - actual_pos.x;
 		delta_y = tmp->cell->y - actual_pos.y;

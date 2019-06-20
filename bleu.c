@@ -11,6 +11,7 @@ typedef enum DOG
   INIT,
   SEARCH,
   GIVE,
+  DIR,
 } DOG;
 
 DOG blue = INIT;
@@ -127,14 +128,15 @@ void supressall(Pile **pile)
 int j = 0;
 void initialize(struct lws *wsi, Pile* pile)
 {
+	printf("Hey init\n");
 	int calcul1, calcul2;
 	Pile *tmp = pile;
-	while(tmp != NULL)
-	{
-		if( monID == tmp->cell->nodeID)
-			break;
+	while(tmp != NULL && monID != tmp->cell->nodeID)
 		tmp = tmp->next;
-	}
+	
+
+	if(tmp == NULL )
+		return;
 
 	if(j == 0)
 	{
@@ -144,7 +146,7 @@ void initialize(struct lws *wsi, Pile* pile)
 			spawn_id = 1;
 		j = 1;
 	}
-
+	printf("Cazou\n");
 	move(wsi, spawnpoints[spawn_id]);
 
 	if(tmp->cell->x == spawnpoints[spawn_id].x && tmp->cell->y == spawnpoints[spawn_id].y)
@@ -283,7 +285,7 @@ void parcours(struct lws *wsi, Pile* chaine)
 
 }
 
-void give(struct lws *wsi, Pile* chaine)
+/*void give(struct lws *wsi, Pile* chaine)
 {
 	vecteur* position;
 	vecteur direction;
@@ -319,7 +321,9 @@ void give(struct lws *wsi, Pile* chaine)
 	direction.x = tmp->cell->x + delta.x;
 	direction.y = tmp->cell->x + delta.y;
 	move(wsi, direction);
-}
+}*/
+
+vecteur bot_pos;
 
 void detect(struct lws *wsi, Pile *chaine) 
 { 
@@ -331,15 +335,53 @@ void detect(struct lws *wsi, Pile *chaine)
 		return; 
 	bot_pos.x = tmp->cell->x; 
 	bot_pos.y = tmp->cell->y; 
-	move(wsi, bot_pos); 
 	blue = GIVE; 
  
 } 
  
-
+int k = 0;
 void give(struct lws *wsi, Pile *chaine)
 {
-	
+	static int compteur = 0;
+	vecteur* jaune_pos;
+	Pile* tmp = chaine;
+	jaune_pos[0].x = 3000; jaune_pos[0].y = 2000;
+	jaune_pos[1].x = 6000; jaune_pos[1].y = 2000;
+	jaune_pos[2].x = 3000; jaune_pos[2].y = 4000;
+	jaune_pos[3].x = 6000; jaune_pos[3].y = 4000;
+	while(tmp != NULL)
+		tmp = tmp->next;
+
+	if(tmp == NULL)
+		return;
+
+
+	if(k == 0)
+	{
+		if(tmp->cell->x <= 4500 && tmp->cell->y <= 3000)
+	      spawn_id = 0;
+	    else if(tmp->cell->x > 4500 && tmp->cell->y <= 3000)
+	      spawn_id = 1;
+	    else if(tmp->cell->x > 4500 && tmp->cell->y <= 3000)
+	      spawn_id = 2;
+	    else if(tmp->cell->x > 4500 && tmp->cell->y > 3000)
+	      spawn_id = 3;
+	  	k = 1;
+	}
+  	move(wsi, jaune_pos[spawn_id]);
+
+  	if(tmp->cell->x == jaune_pos[spawn_id].x && tmp->cell->y == jaune_pos[spawn_id].y)
+  	{
+  		compteur ++;
+  		if(compteur == 30)
+  		{
+  			blue = DIR;
+  			compteur = 0;
+  		}
+  	}
+  	else
+  		compteur = 0;
+
 }
 
 
@@ -351,6 +393,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 		case 0x10 :
 			if(blue == INIT)
 			{
+				printf("mode initial\n");
 				update(paquet);
 				Pile *tmp = chaine;
 
@@ -380,6 +423,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			}
 			else if (blue == SEARCH)
 			{
+				printf("mode search\n");
 				update(paquet);
 				parcours(wsi, chaine);
 				detect(wsi, chaine);
@@ -389,8 +433,11 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 				update(paquet);
 				give(wsi, chaine);
 				printf("BLUE GIVE\n");
-				give(wsi, chaine);
-
+			}
+			else if (blue == DIR)
+			{
+				printf("mode DIR\n");
+				update(paquet);
 			}
 	}
 }
