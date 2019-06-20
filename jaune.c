@@ -118,6 +118,8 @@ void initialize(struct lws *wsi, Pile* pile)
   		break;
   	tmp = tmp->next;
   }
+  if(tmp == NULL)
+  	return;
   /*while(strcmp(tmp->cell->name, "yellow") != 0)
   {
     tmp = tmp->next;
@@ -324,7 +326,7 @@ void update(unsigned char *paquet)
 
 
 int first_dir = 0;
-vecteur take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
+void take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
 {
 	int distance = 0;
 	int hyp = 0;
@@ -348,10 +350,10 @@ vecteur take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
 		tmp = tmp->next;
 
 	if(tmp == NULL)
-		return direction;
+		return;
 
 	if(tmp->cell->x == actual_pos.x && tmp->cell->y == actual_pos.y)
-		return direction;
+		return;
 	printf("delta\n");
 	
 	/*distance = pow( (tmp->cell->x - actual_pos.x), 2) + pow( (tmp->cell->y - actual_pos.y), 2);
@@ -360,7 +362,7 @@ vecteur take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
 	x = tmp->cell->x;
 	y = tmp->cell->y;
 
-	if(x < actual_pos.x-20 || x > actual_pos.x+20 || y < actual_pos.y-20 || y > actual_pos.y+20)
+	if(x < actual_pos.x-50 || x > actual_pos.x+50 || y < actual_pos.y-50 || y > actual_pos.y+50)
 	{
 		delta_x = tmp->cell->x - actual_pos.x;
 		delta_y = tmp->cell->y - actual_pos.y;
@@ -378,11 +380,11 @@ vecteur take_direction(struct lws *wsi, Pile *chaine, int scout_ID)
 		yellow = SEARCHING;	
 	}
 	
-	return(direction);
+	//return(direction);
 }
 
 
-int mouton_here(struct lws *wsi, Pile *chaine, vecteur direction)
+int mouton_here(struct lws *wsi, Pile *chaine)
 {
 	Pile *tmp = chaine;
 	vecteur position;
@@ -391,6 +393,7 @@ int mouton_here(struct lws *wsi, Pile *chaine, vecteur direction)
 
 	position.x = tmp->cell->x + direction.x;
 	position.y = tmp->cell->y + direction.y;
+	printf("direction : %d %d \n", direction.x, direction.y);
 
 	tmp = chaine;
 
@@ -403,7 +406,7 @@ int mouton_here(struct lws *wsi, Pile *chaine, vecteur direction)
 	{
 		//position.x += direction.x;
 		//position.y += direction.y;
-		printf("Searching mouton null\n");
+		printf("%d ** Searching mouton null\n",__LINE__);
 		move(wsi, position);
 		return 0;
 	}
@@ -450,6 +453,7 @@ void push(struct lws* wsi, Pile *pile)
 	move(wsi, direction);
 	if ( (position.x < 636) && (position.y > 2364 && position.y < 3636))
 	{
+		j = 0;
 		yellow = INIT;
 	}
 }
@@ -528,7 +532,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			{
 				update(paquet);
 				printf("entry : %d", scout_ID);
-				dir = take_direction(wsi, chaine, scout_ID);
+				take_direction(wsi, chaine, scout_ID);
 				printf("Cazou\n");
 
 			}
@@ -536,7 +540,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			{
 				printf("Search.......\n");
 				update(paquet);
-				mouton_here(wsi, chaine, dir);
+				mouton_here(wsi, chaine);
 			}
 			else if (yellow == TRACKING)
 			{

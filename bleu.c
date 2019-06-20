@@ -299,6 +299,11 @@ void detect(struct lws *wsi, Pile *chaine)
 }
 
 
+void give(struct lws *wsi, Pile *chaine)
+{
+	
+}
+
 
 int first_ID = 0;
 int recv_packet(unsigned char *paquet, struct lws *wsi)
@@ -344,6 +349,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			else if (blue == GIVE)
 			{
 				update(paquet);
+				give(wsi, chaine);
 				printf("BLUE GIVE\n");
 			}
 	}
