@@ -114,11 +114,12 @@ void insertion(Pile **pile, Cell *upcell){
 void supressall(Pile **pile)
 {
 	Pile* tmp = *pile;
-	while(*pile != NULL)
+	while(NULL != *pile)
 	{
 		tmp = *pile;
 		*pile = tmp->next;
-		free(tmp->cell->name);
+		if(tmp->cell->flag & 0x8)
+			free(tmp->cell->name);
 		free(tmp->cell);
 		free(tmp);
 	}
@@ -348,13 +349,17 @@ int k = 0;
 void give(struct lws *wsi, Pile *chaine)
 {
 	static int compteur = 0;
-	vecteur* jaune_pos;
+	vecteur jaune_pos[4];
 	Pile* tmp = chaine;
-	jaune_pos[0].x = 3000; jaune_pos[0].y = 2000;
-	jaune_pos[1].x = 6000; jaune_pos[1].y = 2000;
-	jaune_pos[2].x = 3000; jaune_pos[2].y = 4000;
-	jaune_pos[3].x = 6000; jaune_pos[3].y = 4000;
-	while(tmp != NULL)
+	jaune_pos[0].x = 3000; 
+	jaune_pos[0].y = 2000;
+	jaune_pos[1].x = 6000; 
+	jaune_pos[1].y = 2000;
+	jaune_pos[2].x = 3000; 
+	jaune_pos[2].y = 4000;
+	jaune_pos[3].x = 6000; 
+	jaune_pos[3].y = 4000;
+	while(tmp != NULL && tmp->cell->nodeID != monID)
 		tmp = tmp->next;
 
 	if(tmp == NULL)
@@ -402,7 +407,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 				update(paquet);
 				Pile *tmp = chaine;
 
-				while(tmp ->next != NULL && strncmp(tmp->cell->name, "bot", 3) != 0)
+				while(tmp ->next != NULL && strncmp(tmp->cell->name, "bot", 3) == 0)
 					tmp = tmp->next;
 
 

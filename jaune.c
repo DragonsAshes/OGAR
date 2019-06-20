@@ -158,6 +158,10 @@ int detect(struct lws *wsi, Pile *chaine, char* nom)
 	
 	while(tmp != NULL && monID != tmp->cell->nodeID)
 		tmp = tmp->next;
+
+	if(tmp == NULL)
+		return 0;
+
 	actual_pos.x = tmp->cell->x;
 	actual_pos.y = tmp->cell->y;
 
@@ -569,7 +573,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 				Pile* tmp = chaine;
 				while(tmp != NULL)
 				{
-					if(strcmp(tmp->cell->name, "blue") == 0 && tmp->cell->nodeID != monID)
+					if(strcmp(tmp->cell->name, "yellow") == 0 && tmp->cell->nodeID != monID)
 					{
 						if(monID < tmp->cell->nodeID)
 						{
