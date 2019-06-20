@@ -402,13 +402,17 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 				update(paquet);
 				Pile *tmp = chaine;
 
-				while(tmp ->next != NULL)
+				while(tmp ->next != NULL && strncmp(tmp->cell->name, "bot", 3) != 0)
 					tmp = tmp->next;
 
-				if(first_ID == 0)
+
+				if(tmp != NULL)
 				{
-					monID = tmp->cell->nodeID;
-					first_ID = 1;
+					if(first_ID == 0)
+					{
+						monID = tmp->cell->nodeID;
+						first_ID = 1;
+					}
 				}
 				tmp = chaine;
 				while(tmp != NULL)

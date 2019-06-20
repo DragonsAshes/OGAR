@@ -529,6 +529,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 					yellow = TRACKING;
 
 				tmp = chaine;
+
 		        while(tmp->next != NULL)
 		        {
 		          tmp = tmp->next;
@@ -557,7 +558,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 					tmp = tmp->next;
 				}
 		      	initialize(wsi, chaine);
-		      	doublon(wsi, chaine);
+		      	//doublon(wsi, chaine);
 			}
 			else if (yellow == WAITING)
 			{
