@@ -514,7 +514,7 @@ void parcours_dog_func(struct lws *wsi)
 	printf("cursor\n");
 	printf("%d\n",cursor_vect.posX);
 	printf("%d\n",cursor_vect.posY);
-	if (compteur_packet>20)
+	if (compteur_packet>50)
 	{
 		printf("position\n");
 		printf("%d\n",my_cell->coord_X);
@@ -639,7 +639,7 @@ void recv_func(unsigned char *rbuf, struct lws *wsi)
 									cursor_vect.posY=my_cell->coord_Y;
 									envoiinfo=FALSE;
 									compteur_frame1++;
-									if (compteur_frame1>=10) // compteur de frame --> wait give info to yellow
+									if (compteur_frame1>=30) // compteur de frame --> wait give info to yellow
 									{
 										if (back==FALSE)
 										{
@@ -647,7 +647,7 @@ void recv_func(unsigned char *rbuf, struct lws *wsi)
 											cursor_vect.posY=liste_mout->cell->y;
 											follow=TRUE;
 										}
-										if (compteur_frame1>=30)
+										if (compteur_frame1>=50)
 										{
 											supressentete(&liste_mout);
 											compteur_frame1=0;

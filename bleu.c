@@ -16,13 +16,17 @@ typedef enum DOG
 
 DOG blue = INIT;
 
+
 typedef struct vecteur{
   int x;
   int y;
 }vecteur;
 
 vecteur spawnpoints[2];
+vecteur jaune_pos[4];
 vecteur direction;
+
+vecteur mouton;
 
 typedef struct Cell
 {
@@ -125,10 +129,11 @@ void supressall(Pile **pile)
 	}
 }
 
-
 int j = 0;
+
 void initialize(struct lws *wsi, Pile* pile)
 {
+	static int compteur = 0;
 	printf("Hey init\n");
 	int calcul1, calcul2;
 	Pile *tmp = pile;
@@ -156,7 +161,15 @@ void initialize(struct lws *wsi, Pile* pile)
 	//if(tmp->cell->x == spawnpoints[spawn_id].x && tmp->cell->y == spawnpoints[spawn_id].y)
 	printf("CELLULE : %d, %d \n", tmp->cell->x, tmp->cell->y);
 	if((tmp->cell->x == 1000 && tmp->cell->y == 1000) || (tmp->cell->x == 8000 && tmp->cell->y == 5000))
-		blue = SEARCH;
+	{
+		if(compteur < 50)
+			compteur++;
+		else
+		{
+			compteur = 0;
+			blue = SEARCH;
+		}
+	}
 }
 
 void update(unsigned char *paquet)
@@ -329,7 +342,7 @@ void parcours(struct lws *wsi, Pile* chaine)
 	move(wsi, direction);
 }*/
 
-vecteur bot_pos;
+
 
 void detect(struct lws *wsi, Pile *chaine) 
 { 
@@ -339,26 +352,22 @@ void detect(struct lws *wsi, Pile *chaine)
 		tmp = tmp->next; 
 	if (tmp == NULL) 
 		return; 
-	bot_pos.x = tmp->cell->x; 
-	bot_pos.y = tmp->cell->y; 
+	if(tmp->cell->x < 636 && (tmp->cell->y < 3636 && tmp->cell->y > 2364))
+		return;
+	mouton.x = tmp->cell->x; 
+	mouton.y = tmp->cell->y; 
 	blue = GIVE; 
  
 } 
+
+
+
  
-int k = 0;
 void give(struct lws *wsi, Pile *chaine)
 {
-	static int compteur = 0;
-	vecteur jaune_pos[4];
+	static int k = 0;
 	Pile* tmp = chaine;
-	jaune_pos[0].x = 3000; 
-	jaune_pos[0].y = 2000;
-	jaune_pos[1].x = 6000; 
-	jaune_pos[1].y = 2000;
-	jaune_pos[2].x = 3000; 
-	jaune_pos[2].y = 4000;
-	jaune_pos[3].x = 6000; 
-	jaune_pos[3].y = 4000;
+
 	while(tmp != NULL && tmp->cell->nodeID != monID)
 		tmp = tmp->next;
 
@@ -382,22 +391,64 @@ void give(struct lws *wsi, Pile *chaine)
 
   	if(tmp->cell->x == jaune_pos[spawn_id].x && tmp->cell->y == jaune_pos[spawn_id].y)
   	{
-  		compteur ++;
-  		if(compteur == 30)
-  		{
-  			blue = DIR;
-  			compteur = 0;
-  		}
+  		k = 0;
+  		blue = DIR;
   	}
-  	else
-  		compteur = 0;
 
 }
+
+
+void dirige(struct lws *wsi, Pile *pile)
+{
+	static int l = 0;
+	static int compteur = 0;
+	Pile *tmp = pile;
+	while(tmp != NULL)
+	{
+		if(strcmp("yellow", tmp->cell->name) == 0)
+		{
+			if(jaune_pos[spawn_id].x == tmp->cell->x && jaune_pos[spawn_id].y == tmp->cell->y)
+				break;
+		}
+		tmp = tmp->next;
+	}
+	if(tmp == NULL)
+	{
+		l = 0;
+		compteur = 0;
+		spawn_id++;
+		blue = SEARCH;
+		return;
+	}
+
+	if(compteur < 30)
+	{
+		compteur++;
+		return;
+	}
+	else
+	{
+		if( l < 15 )
+		{
+			move(wsi, mouton);
+			l++;
+		}
+		else
+		{
+			l = 0;
+			compteur = 0;
+			printf("\ncazou\n");
+			blue = INIT;
+		}
+	}
+}
+
 
 
 int first_ID = 0;
 int recv_packet(unsigned char *paquet, struct lws *wsi)
 {
+	vecteur actual_pos;
 	switch (paquet[0])
 	{
 		case 0x10 :
@@ -407,7 +458,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 				update(paquet);
 				Pile *tmp = chaine;
 
-				while(tmp ->next != NULL && strncmp(tmp->cell->name, "bot", 3) == 0)
+				/*while(tmp ->next != NULL && strncmp(tmp->cell->name, "bot", 3) == 0)
 					tmp = tmp->next;
 
 
@@ -419,12 +470,12 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 						first_ID = 1;
 					}
 				}
-				tmp = chaine;
+				tmp = chaine;*/
 				while(tmp != NULL)
 				{
-					if(strcmp(tmp->cell->name, "blue") == 0 && (tmp->cell->nodeID != monID) )
+					if(strcmp(tmp->cell->name, "blue") == 0 && tmp->cell->nodeID != monID ) 
 					{
-						if( (tmp->cell->x == spawnpoints[spawn_id].x && tmp->cell->y == spawnpoints[spawn_id].y))
+						if( (tmp->cell->x == 1000 && tmp->cell->y == 1000) || (tmp->cell->x == 8000 && tmp->cell->y == 5000))
 						{
 							spawn_id++;
 							spawn_id = spawn_id % 2;
@@ -446,6 +497,38 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			else if (blue == GIVE)
 			{
 				update(paquet);
+				Pile* tmp = chaine;
+				while(tmp != NULL && tmp->cell->nodeID != monID)
+					tmp = tmp->next;
+				if(tmp != NULL)
+				{
+					actual_pos.x = tmp->cell->x;
+					actual_pos.y = tmp->cell->y; 
+				}
+				if(actual_pos.x == 25 && actual_pos.y == 25)
+				{
+					j = 0;
+					blue = INIT;
+				}
+				if( actual_pos.x == jaune_pos[spawn_id].x && actual_pos.y == jaune_pos[spawn_id].y)
+				{
+					tmp = chaine;
+					while(tmp != NULL)
+					{
+						printf("%s\n", tmp->cell->name);
+						if(strcmp("yellow", tmp->cell->name) == 0)
+						{
+							if (tmp->cell->x == jaune_pos[spawn_id].x && tmp->cell->y == jaune_pos[spawn_id].y )
+							{
+								break;
+							}
+						}
+						tmp = tmp->next;
+					}
+					if(tmp == NULL)
+						spawn_id++;
+				}
+
 				give(wsi, chaine);
 				printf("BLUE GIVE\n");
 			}
@@ -453,7 +536,13 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 			{
 				printf("mode DIR\n");
 				update(paquet);
+				dirige(wsi, chaine);
 			}
+			break;
+
+		case 0x20 : 
+			monID = paquet[1];
+			break;
 	}
 }
 
@@ -541,6 +630,17 @@ int main(int argc, char const *argv[])
 
 	spawnpoints[0] = rdv1;
 	spawnpoints[1] = rdv2;
+
+	vecteur pos1; pos1.x = 3000; pos1.y = 2000;
+	vecteur pos2; pos2.x = 6000; pos2.y = 2000;
+	vecteur pos3; pos3.x = 6000; pos3.y = 4000;
+	vecteur pos4; pos4.x = 3000; pos4.y = 4000;
+
+	jaune_pos[0] = pos1;
+	jaune_pos[1] = pos2;
+	jaune_pos[2] = pos3;
+	jaune_pos[3] = pos4;
+
 
 	struct lws_context_creation_info info;
 	struct lws_client_connect_info i;

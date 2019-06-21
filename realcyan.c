@@ -115,9 +115,39 @@ void insertion(Pile **pile, Cell *upcell){
 
 }
 
+
+void supressall(Pile **pile)
+{
+	Pile* tmp = *pile;
+	while(*pile != NULL)
+	{
+		tmp = *pile;
+		*pile = tmp->next;
+		free(tmp->cell->name);
+		free(tmp->cell);
+		free(tmp);
+	}
+}
+
+void printNodeStack(Pile* pile)
+{
+  Pile *tmp = pile;
+
+  if(tmp == NULL)
+    printf("Empty\n");
+
+  while (tmp != NULL)
+  {
+    printf("[%d, %d, %s] -> ", tmp->cell->nodeID, tmp->cell->size, tmp->cell->name);
+    tmp = tmp->next;
+  }
+  printf("\n");
+}
+
 void update(unsigned char *paquet)
 {
 	supressall(&chaine);
+	printNodeStack(chaine);
 	int i;
 	unsigned short deadcellslength;
 		memcpy(&deadcellslength, paquet+1, sizeof(unsigned short));
@@ -153,12 +183,13 @@ void initialize(struct lws *wsi, Pile* pile)
 	vecteur position;
 	Pile *tmp = pile;
 	position.x = 8650;
-	position.y = 3400;
-	move(wsi, position)
+	position.y = 2600;
+	move(wsi, position);
 	while(tmp != NULL && tmp->cell->nodeID != monID)
 		tmp = tmp->next;
 	if(tmp == NULL)
 		return;
+	printf("POSITION : %d / %d et ID = %d\n", position.x, position.y, monID);
 	if(tmp->cell->x == position.x && tmp->cell->y == position.y)
 	{
 		cyan = BALAYAGE;
@@ -168,18 +199,18 @@ void initialize(struct lws *wsi, Pile* pile)
 
 void balaye(struct lws *wsi, Pile* pile)
 {
-	static int mode = 0 //Si mode == 0 alors on descend, si mode == 1 alors on monte
+	static int mode = 0; //Si mode == 0 alors on descend, si mode == 1 alors on monte
 	Pile *tmp = pile;
 	vecteur destination;
 	if(mode == 0)
 	{
 		destination.x = 8500;
-		destination.y = 2600;
+		destination.y = 3400;
 	}
 	else if (mode == 1)
 	{
 		destination.x = 8500;
-		destination.y = 3400;
+		destination.y = 2600;
 	}
 	while(tmp != NULL && tmp->cell->nodeID != monID)
 		tmp = tmp->next;
@@ -225,7 +256,7 @@ void push(struct lws *wsi, Pile *pile)
 	position.x = tmp->cell->x;
 	position.y = tmp->cell->y;
 
-	teta = atanf( (float) (position.x - 7500) / ((float) (5000 - position.y)))
+	teta = atanf( (float) (position.x - 7500) / ((float) (5000 - position.y)));
 	x = sinf(teta) * 50;
 	y = sinf(teta) *50;
 	direction.x = (int) (position.x + x);
@@ -254,27 +285,36 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 		case 0x10 :
 			if( cyan == INIT)
 			{
+				printf("INIT\n");
 				update(paquet);
 				Pile *tmp = chaine;
-				while(tmp ->next != NULL)
-					tmp = tmp->next;
-				if( first_ID == 0)
+				/*while(tmp ->next != NULL)
 				{
-					monID = tmp->cell->nodeID;
-					first_ID = 1;
-				}
+					if( first_ID == 0 && strcmp(tmp->cell->name, "cyan") == 0)
+					{
+						monID = tmp->cell->nodeID;
+						first_ID = 1;
+					}
+					tmp = tmp->next;
+				}*/
+
 				initialize(wsi, chaine);
 			}
 			else if( cyan == BALAYAGE)
 			{
+				printf("BALAYAGE\n");
 				update(paquet);
 				balaye(wsi, chaine);
 			}
 			else if( cyan == PUSHING)
 			{
+				printf("PUSHING\n");
 				update(paquet);
 				push(wsi, chaine);
 			}
+			break;
+		case 0x20 :
+			monID = paquet[1];
 	}
 }
 
@@ -359,15 +399,7 @@ int main(int argc, char const *argv[])
 		printf("Use ./prog ip port\n");
 		return 1;
 	}
-	vecteur rdv1; rdv1.x = 3000; rdv1.y = 2000;
-	vecteur rdv2; rdv2.x = 6000; rdv2.y = 2000;
-	vecteur rdv3; rdv3.x = 3000; rdv3.y = 4000;
-	vecteur rdv4; rdv4.x = 6000; rdv4.y = 4000;
 
-	spawnpoints[0] = rdv1;
-	spawnpoints[1] = rdv2;
-	spawnpoints[2] = rdv3;
-	spawnpoints[3] = rdv4;
 
 	struct lws_context_creation_info info;
 	struct lws_client_connect_info i;

@@ -109,6 +109,7 @@ int j = 0;
 
 void initialize(struct lws *wsi, Pile* pile)
 {
+  printf("Init\n");
   int calcul1, calcul2, calcul3, calcul4;
   Pile *tmp = pile;
   int old;
@@ -120,6 +121,8 @@ void initialize(struct lws *wsi, Pile* pile)
   }
   if(tmp == NULL)
   	return;
+
+
 
   if(j == 0)
   {
@@ -134,6 +137,7 @@ void initialize(struct lws *wsi, Pile* pile)
     j = 1;
   }
 
+
   move(wsi, spawnpoints[spawn_id]);
 
   printf(" Cell->coord : [%d, %d]\n", tmp->cell->x, tmp->cell->y);
@@ -145,6 +149,7 @@ void initialize(struct lws *wsi, Pile* pile)
   	yellow = WAITING;
   	printf("\n Le chien est passé en mode WAIT\n");
   }
+
 
 }
 
@@ -524,7 +529,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 
 				Pile* tmp = chaine;
 
-				while(tmp != NULL)
+				/*while(tmp != NULL)
 				{
 					if(strncmp(tmp->cell->name, "bot", 3) == 0)
 						break;
@@ -533,9 +538,9 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 				if(tmp != NULL)
 					yellow = TRACKING;
 
-				tmp = chaine;
+				tmp = chaine;*/
 
-		        while(tmp->next != NULL)
+		        /*while(tmp->next != NULL)
 		        {
 		          tmp = tmp->next;
 		        }
@@ -543,7 +548,7 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 		        {
 		        	monID = tmp->cell->nodeID;
 		        	first_ID = 1;
-				}
+				}*/
 				tmp = chaine;
 				Pile* pointeur = chaine; 
 				while(tmp != NULL)
@@ -619,6 +624,11 @@ int recv_packet(unsigned char *paquet, struct lws *wsi)
 				push(wsi, chaine);
 
 			}
+			break;
+
+		case 0x20 :
+			monID = paquet[1];
+			printf("------------------------\nID : %d\n----------------------------\n", monID);
 			break;
 
 		case 0x40 :
